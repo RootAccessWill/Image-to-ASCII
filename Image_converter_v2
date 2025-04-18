@@ -44,40 +44,51 @@ class ImageConverter:
 
         return ascii_art
 
+# Changed to add error handling
 
 def main():
     """
     Main function to handle the GUI for file selection and saving ASCII art.
     """
-    # Hide Tkinter root window
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes('-topmost', True)
-
-    # Prompt user to select an image file
-    image_path = filedialog.askopenfilename()
-    if not image_path:
-        print("No file selected. Exiting...")
-        return
-
-    # Convert image to ASCII
     try:
-        converter = ImageConverter(image_path)
-        ascii_art = converter.convert_to_ascii()
-    except Exception as e:
-        print(f"Error during conversion: {e}")
-        return
+        # Hide Tkinter root window
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
 
-    # Save ASCII art to a text file
-    output_path = Path(image_path).with_suffix('.txt')
-    if output_path.exists():
-        print(f"Warning: {output_path} already exists and will be overwritten.")
-    try:
-        with open(output_path, 'w') as f:
-            f.write(ascii_art)
-        print(f"ASCII art saved to {output_path}")
+        print("Select an image file...")
+        # Prompt user to select an image file
+        image_path = filedialog.askopenfilename()
+        if not image_path:
+            print("No file selected. Exiting...")
+            input("Press Enter to exit...")
+            return
+
+        print(f"File selected: {image_path}")
+
+        # Convert image to ASCII
+        try:
+            converter = ImageConverter(image_path)
+            ascii_art = converter.convert_to_ascii()
+        except Exception as e:
+            print(f"Error during conversion: {e}")
+            input("Press Enter to exit...")
+            return
+
+        # Save ASCII art to a text file
+        output_path = Path(image_path).with_suffix('.txt')
+        if output_path.exists():
+            print(f"Warning: {output_path} already exists and will be overwritten.")
+        try:
+            with open(output_path, 'w') as f:
+                f.write(ascii_art)
+            print(f"ASCII art saved to {output_path}")
+        except Exception as e:
+            print(f"Error: Unable to save ASCII art. {e}")
+        input("Press Enter to exit...")
     except Exception as e:
-        print(f"Error: Unable to save ASCII art. {e}")
+        print(f"An unexpected error occurred: {e}")
+        input("Press Enter to exit...")
 
 
 if __name__ == "__main__":
