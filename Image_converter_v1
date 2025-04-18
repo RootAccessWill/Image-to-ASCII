@@ -1,0 +1,49 @@
+import os
+import tkinter as tk
+from tkinter import filedialog
+from PIL import Image
+from pathlib import Path
+
+
+class ImageConverter:
+    def __init__(self, image_path):
+        self.image = Image.open(image_path)
+
+    def convert_to_ascii(self):
+        ascii_chars = '~!@#$%^&*()_+|}{":?><,./;[]\`-= '
+        ascii_art = ''
+
+        width, height = self.image.size
+        new_width = 512
+        aspect_ratio = height / width
+        new_height = int(aspect_ratio * new_width * 0.35)
+
+        resized_image = self.image.resize((new_width, new_height))
+        grayscale_image = resized_image.convert('L')
+
+        pixel_values = list(grayscale_image.getdata())
+        ascii_art_lines = [
+            ''.join(ascii_chars[pixel_value // 32] for pixel_value in pixel_values[i:i + new_width])
+            for i in range(0, len(pixel_values), new_width)
+        ]
+        ascii_art = '\n'.join(ascii_art_lines)
+
+        return ascii_art
+
+
+def main():
+    root = tk.Tk()
+    root.withdraw()
+
+    image_path = filedialog.askopenfilename()
+
+    converter = ImageConverter(image_path)
+    ascii_art = converter.convert_to_ascii()
+
+    output_path = Path(image_path).with_suffix('.txt')
+    with open(output_path, 'w') as f:
+        f.write(ascii_art)
+
+
+if __name__ == "__main__":
+    main()
