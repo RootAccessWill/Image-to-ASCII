@@ -7,23 +7,37 @@ from pathlib import Path
 
 class ImageConverter:
     def __init__(self, image_path):
-        self.image = Image.open(image_path)
+        """
+        Initializes the ImageConverter with the given image path.
+        """
+        try:
+            self.image = Image.open(image_path)
+        except Exception as e:
+            raise ValueError(f"Error: Unable to open image. {e}")
 
     def convert_to_ascii(self):
-        ascii_chars = '~!@#$%^&*()_+|}{":?><,./;[]\`-= '
+        """
+        Converts the image to ASCII art and returns it as a string.
+        """
+        ascii_chars = '~!@#$%^&*()_+|}{":?><,./;[]\\`-= '
         ascii_art = ''
 
+        # Get image dimensions
         width, height = self.image.size
         new_width = 512
         aspect_ratio = height / width
-        new_height = int(aspect_ratio * new_width * 0.35)
+        HEIGHT_SCALING_FACTOR = 0.35
+        new_height = int(aspect_ratio * new_width * HEIGHT_SCALING_FACTOR)
 
+        # Resize and convert to grayscale
         resized_image = self.image.resize((new_width, new_height))
         grayscale_image = resized_image.convert('L')
 
+        # Convert pixel values to ASCII characters
+        ASCII_BUCKET_SIZE = 256 // len(ascii_chars)
         pixel_values = list(grayscale_image.getdata())
         ascii_art_lines = [
-            ''.join(ascii_chars[pixel_value // 32] for pixel_value in pixel_values[i:i + new_width])
+            ''.join(ascii_chars[pixel_value // ASCII_BUCKET_SIZE] for pixel_value in pixel_values[i:i + new_width])
             for i in range(0, len(pixel_values), new_width)
         ]
         ascii_art = '\n'.join(ascii_art_lines)
@@ -32,17 +46,38 @@ class ImageConverter:
 
 
 def main():
+    """
+    Main function to handle the GUI for file selection and saving ASCII art.
+    """
+    # Hide Tkinter root window
     root = tk.Tk()
     root.withdraw()
+    root.attributes('-topmost', True)
 
+    # Prompt user to select an image file
     image_path = filedialog.askopenfilename()
+    if not image_path:
+        print("No file selected. Exiting...")
+        return
 
-    converter = ImageConverter(image_path)
-    ascii_art = converter.convert_to_ascii()
+    # Convert image to ASCII
+    try:
+        converter = ImageConverter(image_path)
+        ascii_art = converter.convert_to_ascii()
+    except Exception as e:
+        print(f"Error during conversion: {e}")
+        return
 
+    # Save ASCII art to a text file
     output_path = Path(image_path).with_suffix('.txt')
-    with open(output_path, 'w') as f:
-        f.write(ascii_art)
+    if output_path.exists():
+        print(f"Warning: {output_path} already exists and will be overwritten.")
+    try:
+        with open(output_path, 'w') as f:
+            f.write(ascii_art)
+        print(f"ASCII art saved to {output_path}")
+    except Exception as e:
+        print(f"Error: Unable to save ASCII art. {e}")
 
 
 if __name__ == "__main__":
