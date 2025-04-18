@@ -1,3 +1,4 @@
+import subprocess
 import tkinter as tk
 from tkinter import filedialog
 
@@ -11,14 +12,24 @@ def select_output_folder():
     if output_folder:
         output_path_label.config(text=output_folder)
 
+# Changed to call second script
+
 def convert():
     input_path = input_path_label.cget("text")
     output_path = output_path_label.cget("text")
     if input_path and output_path:
-        # Add your image conversion logic here
-        print(f"Converting {input_path} and saving to {output_path}")
+        try:
+            # Call the separate Python script
+            subprocess.run(
+                ["python", "Image_converter.py", input_path, output_path],
+                check=True
+            )
+            print("Conversion completed successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred: {e}")
     else:
         print("Please specify both input and output paths.")
+
 
 # Create the main window
 root = tk.Tk()
