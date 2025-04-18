@@ -51,7 +51,8 @@ class ImageConverter:
         width, height = self.image.size
 
         # Adjust height for ASCII aspect ratio (e.g., 2:1)
-        adjusted_height = int(height / 2)
+        aspect_ratio_correction = 2  # Approximation for most monospaced fonts
+        adjusted_height = int(height / aspect_ratio_correction)
         new_width = int(width * scale_factor)
         new_height = int(adjusted_height * scale_factor)
 
@@ -99,11 +100,21 @@ def convert():
     """
     input_path = input_path_label.cget("text")
     output_path = output_path_label.cget("text")
-    size = size_slider.get() / 100  # Get the scaling factor from the slider (convert to a fraction)
+    scale_text = scale_entry.get().strip()
+
+    try:
+        # Validate scale factor
+        scale_factor = float(scale_text) / 100  # Convert percentage to a fraction
+        if scale_factor <= 0 or scale_factor > 2:
+            raise ValueError("Scale factor must be between 1 and 200 percent.")
+
+    except ValueError as e:
+        output_text.insert(tk.END, f"Invalid scale factor: {scale_text}. Please enter a number between 1 and 200.\n")
+        return
 
     if input_path and output_path:
         output_text.delete(1.0, tk.END)  # Clear any previous output
-        threading.Thread(target=run_conversion, args=(input_path, output_path, size)).start()
+        threading.Thread(target=run_conversion, args=(input_path, output_path, scale_factor)).start()
     else:
         output_text.insert(tk.END, "Please specify both input and output paths.\n")
 
@@ -148,11 +159,11 @@ output_path_label = tk.Label(root, text="", bg="white", anchor="w", width=40)
 output_path_label.grid(row=1, column=1, padx=10, pady=10)
 tk.Button(root, text="Browse", command=select_output_folder).grid(row=1, column=2, padx=10, pady=10)
 
-# ASCII size slider
+# ASCII scale factor entry
 tk.Label(root, text="Scale Factor (%):").grid(row=2, column=0, padx=10, pady=10)
-size_slider = tk.Scale(root, from_=10, to=200, orient=tk.HORIZONTAL, length=300)
-size_slider.set(100)  # Default scale factor (100%)
-size_slider.grid(row=2, column=1, padx=10, pady=10)
+scale_entry = tk.Entry(root, width=10)
+scale_entry.insert(0, "100")  # Default scale factor (100%)
+scale_entry.grid(row=2, column=1, padx=10, pady=10)
 
 # Convert button
 tk.Button(root, text="Convert", command=convert).grid(row=3, column=1, pady=20)
